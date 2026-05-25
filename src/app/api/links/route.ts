@@ -35,30 +35,45 @@ export async function POST(request: NextRequest) {
 
     const shortCode = customCode || nanoid(7);
 
-    const { data: link, error: insertError } = await supabase
+    const insertPayload: Record<string, unknown> = {
+      shortCode,
+      originalUrl,
+      userId: userId || undefined,
+      userEmail: userEmail || undefined,
+    };
+    if (domain) insertPayload.domain = domain;
+
+    let { data: link, error: insertError } = await supabase
       .from("Link")
-      .insert({
-        shortCode,
-        originalUrl,
-        userId: userId || undefined,
-        userEmail: userEmail || undefined,
-        domain: domain || undefined,
-      })
+      .insert(insertPayload)
       .select()
       .single();
+
+    // Retry without domain if column doesn't exist yet
+    if (insertError && insertError.message?.includes("domain")) {
+      delete insertPayload.domain;
+      const retry = await supabase
+        .from("Link")
+        .insert(insertPayload)
+        .select()
+        .single();
+      link = retry.data;
+      insertError = retry.error;
+    }
 
     if (insertError || !link) {
       console.error("Create link error:", insertError);
       return NextResponse.json({ error: "Failed to create link" }, { status: 500 });
     }
 
-    const baseUrl = link.domain ? "https://" + link.domain : process.env.NEXT_PUBLIC_BASE_URL;
+    const storedDomain = (link as Record<string, unknown>).domain || domain;
+    const baseUrl = storedDomain ? "https://" + storedDomain : process.env.NEXT_PUBLIC_BASE_URL;
 
     return NextResponse.json({
       shortCode: link.shortCode,
       shortUrl: baseUrl + "/s/" + link.shortCode,
       originalUrl: link.originalUrl,
-      domain: link.domain || null,
+      domain: storedDomain || null,
     });
   } catch (error) {
     console.error("Create link error:", error);
