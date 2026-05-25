@@ -11,7 +11,7 @@ import { UserMenu } from "@/components/UserMenu";
 
 interface LinkData {
   id: string; shortCode: string; originalUrl: string;
-  clickCount: number; createdAt: string; isActive: boolean; userEmail?: string;
+  clickCount: number; createdAt: string; isActive: boolean; userEmail?: string; domain?: string | null;
 }
 
 interface UserData {
@@ -291,7 +291,7 @@ export default function AdminDashboardPage() {
                 <tbody>
                   {data.links.map(l => (
                     <tr key={l.id} className="border-t border-[var(--shadow-dark)]/30">
-                      <td className="py-3 px-3"><div className="flex items-center gap-1"><Link href={`/admin/dashboard/links/${l.id}`} className="text-[var(--primary)] font-semibold hover:underline">/s/{l.shortCode}</Link><button onClick={() => { navigator.clipboard.writeText(process.env.NEXT_PUBLIC_BASE_URL + "/s/" + l.shortCode); addToast("success", "Copied!"); }} className="neu-btn p-1" title="Copy link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg></button></div></td>
+                      <td className="py-3 px-3"><div className="flex items-center gap-1"><Link href={`/admin/dashboard/links/${l.id}`} className="text-[var(--primary)] font-semibold hover:underline">/s/{l.shortCode}</Link><button onClick={() => { navigator.clipboard.writeText("https://" + (l.domain ?? "dinka.shop") + "/s/" + l.shortCode); addToast("success", "Copied!"); }} className="neu-btn p-1" title="Copy link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg></button></div></td>
                       <td className="py-3 px-3 hidden lg:table-cell text-[var(--text-secondary)]"><div className="flex items-center gap-2">{l.userEmail ? <><Avatar email={l.userEmail} size={22} /><span className="truncate max-w-[120px]">{l.userEmail}</span></> : "Guest"}</div></td>
                       <td className="py-3 px-3 hidden md:table-cell max-w-[150px] truncate text-[var(--text-secondary)]">{l.originalUrl}</td>
                       <td className="py-3 px-3 text-center"><span className="neu-badge text-[var(--primary)]">{l.clickCount}</span></td>
