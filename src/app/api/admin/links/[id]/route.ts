@@ -34,6 +34,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       createdAt: link.createdAt,
       isActive: link.isActive,
       userEmail: link.userEmail,
+      domain: link.domain || null,
       clicks: clicks || [],
     });
   } catch {

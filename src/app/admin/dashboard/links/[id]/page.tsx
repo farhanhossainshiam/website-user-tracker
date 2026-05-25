@@ -32,6 +32,7 @@ interface LinkDetail {
   createdAt: string;
   isActive: boolean;
   userEmail?: string;
+  domain: string | null;
   clicks: ClickData[];
 }
 
@@ -166,7 +167,12 @@ export default function AdminLinkDetailPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <div>
               <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase">Short Link</p>
-              <p className="text-xl font-bold text-[var(--primary)]">/s/{data.shortCode}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xl font-bold text-[var(--primary)]">{data.domain ? data.domain : process.env.NEXT_PUBLIC_BASE_URL?.replace("https://", "")}/s/{data.shortCode}</p>
+                <button onClick={() => { navigator.clipboard.writeText((data.domain ? "https://" + data.domain : process.env.NEXT_PUBLIC_BASE_URL) + "/s/" + data.shortCode); }} className="neu-btn p-1" title="Copy link">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                </button>
+              </div>
             </div>
             <div className="flex items-center gap-6">
               <div className="text-center"><p className="text-xs text-[var(--text-secondary)]">Clicks</p><p className="text-2xl font-bold text-[var(--primary)]">{data.clickCount}</p></div>

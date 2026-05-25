@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
         originalUrl,
         userId: userId || undefined,
         userEmail: userEmail || undefined,
+        domain: domain || undefined,
       })
       .select()
       .single();
@@ -51,12 +52,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to create link" }, { status: 500 });
     }
 
-    const baseUrl = domain ? "https://" + domain : process.env.NEXT_PUBLIC_BASE_URL;
+    const baseUrl = link.domain ? "https://" + link.domain : process.env.NEXT_PUBLIC_BASE_URL;
 
     return NextResponse.json({
       shortCode: link.shortCode,
       shortUrl: baseUrl + "/s/" + link.shortCode,
       originalUrl: link.originalUrl,
+      domain: link.domain || null,
     });
   } catch (error) {
     console.error("Create link error:", error);

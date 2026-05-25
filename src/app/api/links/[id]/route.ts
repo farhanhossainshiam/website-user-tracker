@@ -32,6 +32,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       clickCount: link.clickCount,
       createdAt: link.createdAt,
       isActive: link.isActive,
+      domain: link.domain || null,
       clicks: clicks || [],
     });
   } catch {
