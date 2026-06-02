@@ -240,6 +240,7 @@ export default function AdminLinkDetailPage() {
                       <th className="pb-3 font-semibold px-2">Browser</th>
                       <th className="pb-3 font-semibold px-2">OS</th>
                       <th className="pb-3 font-semibold px-2">Device</th>
+                      <th className="pb-3 font-semibold px-2">Model</th>
                       <th className="pb-3 font-semibold px-2">Country</th>
                       <th className="pb-3 font-semibold px-2">City</th>
                       <th className="pb-3 font-semibold px-2">ISP</th>
@@ -265,7 +266,8 @@ export default function AdminLinkDetailPage() {
                           </td>
                           <td className="py-2.5 px-2"><span className="neu-badge text-xs">{click.browser} {click.browserVersion}</span></td>
                           <td className="py-2.5 px-2 text-[var(--text-secondary)]">{click.os}</td>
-                          <td className="py-2.5 px-2"><span className={`neu-badge text-xs ${click.deviceType === "mobile" ? "text-[var(--primary)]" : click.deviceType === "tablet" ? "text-[var(--success)]" : "text-[var(--text-secondary)]"}`}>{click.deviceModel || click.deviceType}</span></td>
+                          <td className="py-2.5 px-2"><span className={`neu-badge text-xs ${click.deviceType === "mobile" ? "text-[var(--primary)]" : click.deviceType === "tablet" ? "text-[var(--success)]" : "text-[var(--text-secondary)]"}`}>{click.deviceType || "desktop"}</span></td>
+                          <td className="py-2.5 px-2 text-[var(--text-secondary)]">{click.deviceModel || "-"}</td>
                           <td className="py-2.5 px-2 text-[var(--text-secondary)]">{click.country}</td>
                           <td className="py-2.5 px-2 text-[var(--text-secondary)]">{click.city}</td>
                           <td className="py-2.5 px-2 text-[var(--text-secondary)]">{click.isp}</td>
