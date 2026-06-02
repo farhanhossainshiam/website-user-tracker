@@ -111,7 +111,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="px-6 pb-10 max-w-5xl mx-auto">
+      <main className="px-6 pb-10 w-full">
         <div className="neu-card mb-6 animate-fade-in">
           <p className="text-sm text-[var(--text-secondary)]">Total Links</p>
           <p className="text-3xl font-bold text-[var(--primary)]">{links.length}</p>

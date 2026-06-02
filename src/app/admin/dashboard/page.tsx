@@ -170,7 +170,7 @@ export default function AdminDashboardPage() {
         </div>
       </header>
 
-      <main className="px-6 pb-10 max-w-7xl mx-auto">
+      <main className="px-6 pb-10 w-full">
         <div className="flex gap-3 mb-6">
           <button onClick={() => setTab("stats")} className={tab === "stats" ? "neu-primary-btn !py-2.5 !px-5 text-sm" : "neu-btn px-5 py-2.5 text-sm font-semibold text-[var(--text-secondary)]"}>Statistics</button>
           <button onClick={() => setTab("links")} className={tab === "links" ? "neu-primary-btn !py-2.5 !px-5 text-sm" : "neu-btn px-5 py-2.5 text-sm font-semibold text-[var(--text-secondary)]"}>Links</button>

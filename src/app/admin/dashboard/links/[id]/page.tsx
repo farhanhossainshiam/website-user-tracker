@@ -168,7 +168,7 @@ export default function AdminLinkDetailPage() {
         <ThemeToggle />
       </header>
 
-      <main className="px-6 pb-10 max-w-7xl mx-auto">
+      <main className="px-6 pb-10 w-full">
         <div className="neu-card mb-6 animate-fade-in">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <div>
