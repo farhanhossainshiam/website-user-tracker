@@ -15,6 +15,8 @@ interface ClickData {
   browserVersion: string;
   os: string;
   deviceType: string;
+  deviceVendor?: string;
+  deviceModel?: string;
   screenResolution: string;
   language: string;
   referrer: string;
@@ -44,6 +46,8 @@ const EXPORT_FIELDS = [
   { key: "browser", label: "Browser" },
   { key: "os", label: "OS" },
   { key: "deviceType", label: "Device" },
+  { key: "deviceModel", label: "Device Model" },
+  { key: "deviceVendor", label: "Device Vendor" },
   { key: "isp", label: "ISP" },
   { key: "language", label: "Language" },
   { key: "screenResolution", label: "Screen" },
@@ -63,7 +67,9 @@ function getFieldValue(c: ClickData, key: ExportFieldKey): string {
     case "country": return c.country || "-";
     case "browser": return `${c.browser} ${c.browserVersion}`;
     case "os": return c.os || "-";
-    case "deviceType": return c.deviceType || "-";
+    case "deviceType": return c.deviceType || "desktop";
+    case "deviceModel": return c.deviceModel || "-";
+    case "deviceVendor": return c.deviceVendor || "-";
     case "isp": return c.isp || "-";
     case "language": return c.language || "-";
     case "screenResolution": return c.screenResolution || "-";
@@ -259,7 +265,7 @@ export default function AdminLinkDetailPage() {
                           </td>
                           <td className="py-2.5 px-2"><span className="neu-badge text-xs">{click.browser} {click.browserVersion}</span></td>
                           <td className="py-2.5 px-2 text-[var(--text-secondary)]">{click.os}</td>
-                          <td className="py-2.5 px-2"><span className={`neu-badge text-xs ${click.deviceType === "mobile" ? "text-[var(--primary)]" : click.deviceType === "tablet" ? "text-[var(--success)]" : "text-[var(--text-secondary)]"}`}>{click.deviceType}</span></td>
+                          <td className="py-2.5 px-2"><span className={`neu-badge text-xs ${click.deviceType === "mobile" ? "text-[var(--primary)]" : click.deviceType === "tablet" ? "text-[var(--success)]" : "text-[var(--text-secondary)]"}`}>{click.deviceModel || click.deviceType}</span></td>
                           <td className="py-2.5 px-2 text-[var(--text-secondary)]">{click.country}</td>
                           <td className="py-2.5 px-2 text-[var(--text-secondary)]">{click.city}</td>
                           <td className="py-2.5 px-2 text-[var(--text-secondary)]">{click.isp}</td>

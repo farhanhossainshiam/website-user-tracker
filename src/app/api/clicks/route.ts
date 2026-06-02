@@ -31,9 +31,7 @@ export async function POST(request: NextRequest) {
     const ua = parseUserAgent(userAgent);
     const geo = await getGeoData(ip);
 
-    const { error: clickError } = await supabase
-      .from("Click")
-      .insert({
+    const clickPayload: Record<string, unknown> = {
         linkId: link.id,
         ipAddress: ip,
         userAgent,
@@ -48,7 +46,20 @@ export async function POST(request: NextRequest) {
         country: geo.country,
         city: geo.city,
         isp: geo.isp,
-      });
+      };
+
+      if (ua.deviceVendor) clickPayload.deviceVendor = ua.deviceVendor;
+      if (ua.deviceModel) clickPayload.deviceModel = ua.deviceModel;
+
+      let { error: clickError } = await supabase.from("Click").insert(clickPayload);
+
+      // Retry without device columns if they don't exist yet
+      if (clickError && clickError.message?.match(/device(Vendor|Model)/)) {
+        delete clickPayload.deviceVendor;
+        delete clickPayload.deviceModel;
+        const retry = await supabase.from("Click").insert(clickPayload);
+        clickError = retry.error;
+      }
 
     if (clickError) {
       console.error("Track click error:", clickError);

@@ -10,5 +10,7 @@ export function parseUserAgent(ua: string) {
     os: result.os.name || "",
     osVersion: result.os.version || "",
     deviceType: result.device.type || "desktop",
+    deviceVendor: result.device.vendor || "",
+    deviceModel: result.device.model || "",
   };
 }
