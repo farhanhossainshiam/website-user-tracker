@@ -19,6 +19,12 @@ function LoginForm() {
     if (searchParams.get("banned")) {
       addToast("error", "Your account has been banned for violating our terms and conditions.");
     }
+    if (searchParams.get("error") === "auth") {
+      addToast("error", "Invalid or expired confirmation link. Please try again.");
+    }
+    if (searchParams.get("error") === "unexpected") {
+      addToast("error", "Something went wrong. Please try again.");
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
