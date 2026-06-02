@@ -74,10 +74,13 @@ function LoginForm() {
           {loading ? "Signing in..." : "Sign In"}
         </button>
 
-        <p className="text-center mt-4 text-sm text-[var(--text-secondary)]">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-[var(--primary)] font-semibold hover:underline">Register</Link>
-        </p>
+          <p className="text-center mt-4 text-sm text-[var(--text-secondary)]">
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="text-[var(--primary)] font-semibold hover:underline">Register</Link>
+          </p>
+          <p className="text-center mt-2 text-sm">
+            <Link href="/forgot-password" className="text-[var(--text-secondary)] hover:underline">Forgot password?</Link>
+          </p>
       </form>
     </div>
   );

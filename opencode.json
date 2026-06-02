@@ -17,6 +17,14 @@
         "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}",
         "SUPABASE_PROJECT_REF": "dvfqaiuluoncgnxsxytj"
       }
+    },
+    "resend": {
+      "type": "local",
+      "command": ["npx", "-y", "resend-mcp"],
+      "enabled": true,
+      "environment": {
+        "RESEND_API_KEY": "re_8xXszB7a_BLZ7S8cZEiobNx7DurWipLSt"
+      }
     }
   }
 }
