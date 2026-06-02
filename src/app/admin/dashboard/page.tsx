@@ -230,7 +230,7 @@ export default function AdminDashboardPage() {
                     ) : users.filter(u => u.isOnline).map(u => (
                       <div key={u.userId} className="flex items-center gap-2">
                         <Avatar email={u.email} size={24} tooltip />
-                        <span className="text-sm font-medium text-[var(--text)] truncate">{u.email}</span>
+                        <span className="text-sm font-medium text-[var(--text)] break-all">{u.email}</span>
                       </div>
                     ))}
                   </div>
@@ -246,7 +246,7 @@ export default function AdminDashboardPage() {
                     ) : users.filter(u => !u.isOnline).map(u => (
                       <div key={u.userId} className="flex items-center gap-2">
                         <Avatar email={u.email} size={24} tooltip />
-                        <span className="text-sm font-medium text-[var(--text-secondary)] truncate">{u.email}</span>
+                        <span className="text-sm font-medium text-[var(--text-secondary)] break-all">{u.email}</span>
                       </div>
                     ))}
                   </div>
@@ -320,7 +320,7 @@ export default function AdminDashboardPage() {
                     {users.filter(u => u.isOnline).map(u => (
                       <div key={u.userId} className="flex items-center gap-3 neu-pressed !p-3 !rounded-xl">
                         <Avatar email={u.email} size={28} tooltip />
-                        <span className="text-sm font-semibold text-[var(--text)] truncate">{u.email}</span>
+                        <span className="text-sm font-semibold text-[var(--text)] break-all">{u.email}</span>
                         <span className="ml-auto text-xs text-[var(--text-secondary)]">{u.linkCount} links · {u.totalClicks} clicks</span>
                       </div>
                     ))}
@@ -339,7 +339,7 @@ export default function AdminDashboardPage() {
                     {users.filter(u => !u.isOnline).map(u => (
                       <div key={u.userId} className="flex items-center gap-3 neu-pressed !p-3 !rounded-xl">
                         <Avatar email={u.email} size={28} tooltip />
-                        <span className="text-sm font-semibold text-[var(--text-secondary)] truncate">{u.email}</span>
+                        <span className="text-sm font-semibold text-[var(--text-secondary)] break-all">{u.email}</span>
                         <span className="ml-auto text-xs text-[var(--text-secondary)]">
                           {u.lastSeen ? new Date(u.lastSeen).toLocaleString() : "Never"}
                         </span>
@@ -369,7 +369,7 @@ export default function AdminDashboardPage() {
                         <td className="py-3 px-3">
                           <div className="flex items-center gap-2">
                             <Avatar email={u.email} size={28} tooltip />
-                            <p className="font-semibold text-[var(--text)] text-sm truncate max-w-[180px]">{u.email}</p>
+                            <p className="font-semibold text-[var(--text)] text-sm break-all">{u.email}</p>
                           </div>
                         </td>
                         <td className="py-3 px-3 text-center"><span className="neu-badge">{u.linkCount}</span></td>
