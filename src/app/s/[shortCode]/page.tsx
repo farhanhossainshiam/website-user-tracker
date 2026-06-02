@@ -7,9 +7,11 @@ export default function RedirectPage() {
   const params = useParams();
   const shortCode = params.shortCode as string;
   const [error, setError] = useState("");
+  const [destUrl, setDestUrl] = useState("");
+  const [tracked, setTracked] = useState(false);
 
   useEffect(() => {
-    const trackAndRedirect = async () => {
+    const track = async () => {
       try {
         const screenResolution = `${window.screen.width}x${window.screen.height}`;
         const language = navigator.language || "";
@@ -28,7 +30,9 @@ export default function RedirectPage() {
         const data = await res.json();
 
         if (data.originalUrl) {
-          window.location.href = data.originalUrl;
+          setDestUrl(data.originalUrl);
+          setTracked(true);
+          window.location.replace(data.originalUrl);
         } else if (!res.ok) {
           setError(data.error || "Link not found");
         }
@@ -37,7 +41,7 @@ export default function RedirectPage() {
       }
     };
 
-    trackAndRedirect();
+    track();
   }, [shortCode]);
 
   if (error) {
@@ -63,14 +67,33 @@ export default function RedirectPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center neu-bg">
-      <div className="text-center animate-fade-in">
-        <div className="neu-convex w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-          <svg className="animate-spin" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5">
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-          </svg>
-        </div>
-        <h1 className="text-xl font-bold text-[var(--text)]">Redirecting you...</h1>
-        <p className="text-[var(--text-secondary)] mt-2 text-sm">Please wait a moment</p>
+      <div className="text-center animate-fade-in neu-card max-w-lg w-full">
+        {destUrl ? (
+          <>
+            <p className="text-[var(--text-secondary)] mb-2 text-sm">
+              {tracked ? "Redirecting you..." : "Loading..."}
+            </p>
+            <a
+              href={destUrl}
+              className="neu-primary-btn inline-block text-lg px-8 py-3"
+            >
+              Continue to destination
+            </a>
+            <p className="text-[var(--text-secondary)] mt-4 text-xs break-all">
+              {destUrl}
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="neu-convex w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <svg className="animate-spin" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+              </svg>
+            </div>
+            <h1 className="text-xl font-bold text-[var(--text)]">Redirecting you...</h1>
+            <p className="text-[var(--text-secondary)] mt-2 text-sm">Please wait a moment</p>
+          </>
+        )}
       </div>
     </div>
   );
