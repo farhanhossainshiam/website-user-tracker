@@ -33,6 +33,15 @@ function LoginForm() {
       return;
     }
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from("Profile").upsert({
+        userId: user.id,
+        email: user.email || email,
+        role: "user",
+      });
+    }
+
     addToast("success", "Signed in successfully!");
     window.location.href = "/dashboard";
   };

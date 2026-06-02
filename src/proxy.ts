@@ -57,7 +57,15 @@ export async function proxy(request: NextRequest) {
       .from("Profile")
       .select("role")
       .eq("userId", user.id)
-      .single();
+      .maybeSingle();
+
+    if (!profile) {
+      await supabase.from("Profile").upsert({
+        userId: user.id,
+        email: user.email || "",
+        role: "user",
+      });
+    }
 
     const isAdmin = profile?.role === "admin";
 

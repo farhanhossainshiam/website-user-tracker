@@ -15,6 +15,11 @@ export async function GET() {
 
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
+    const profileMap = new Map<string, { email: string; role: string }>();
+    for (const p of profiles || []) {
+      profileMap.set(p.userId, { email: p.email || "", role: p.role });
+    }
+
     const linkCounts = new Map<string, { linkCount: number; totalClicks: number }>();
     for (const link of links || []) {
       if (!link.userId) continue;
@@ -24,21 +29,25 @@ export async function GET() {
       linkCounts.set(link.userId, existing);
     }
 
-    const presenceByUser = new Map<string, string>();
+    const presenceByUser = new Map<string, { lastSeenAt: string; userEmail: string }>();
     for (const p of presence || []) {
-      if (p.userId && p.lastSeenAt) {
-        presenceByUser.set(p.userId, new Date(p.lastSeenAt).toISOString());
+      if (p.userId) {
+        presenceByUser.set(p.userId, { lastSeenAt: p.lastSeenAt || "", userEmail: p.userEmail || "" });
       }
     }
 
-    const users = (profiles || []).map((p) => {
-      const lc = linkCounts.get(p.userId) || { linkCount: 0, totalClicks: 0 };
-      const lastSeen = presenceByUser.get(p.userId) || null;
+    const allUserIds = new Set([...profileMap.keys(), ...presenceByUser.keys()]);
+
+    const users = Array.from(allUserIds).map((userId) => {
+      const prof = profileMap.get(userId);
+      const pres = presenceByUser.get(userId);
+      const lc = linkCounts.get(userId) || { linkCount: 0, totalClicks: 0 };
+      const lastSeen = pres?.lastSeenAt ? new Date(pres.lastSeenAt).toISOString() : null;
       const isOnline = lastSeen ? new Date(lastSeen) > fiveMinutesAgo : false;
       return {
-        userId: p.userId,
-        email: p.email || "",
-        role: p.role,
+        userId,
+        email: prof?.email || pres?.userEmail || "",
+        role: prof?.role || "user",
         linkCount: lc.linkCount,
         totalClicks: lc.totalClicks,
         isOnline,
