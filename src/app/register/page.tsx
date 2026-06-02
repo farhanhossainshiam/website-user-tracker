@@ -56,7 +56,8 @@ export default function RegisterPage() {
       return;
     }
 
-    addToast("error", "Something went wrong. Try again.");
+    // No session, no user object — email was sent (or re-sent) for confirmation
+    addToast("info", "Check your email to confirm your account, then login.");
     setLoading(false);
   };
 
