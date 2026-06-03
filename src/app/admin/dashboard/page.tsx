@@ -16,7 +16,7 @@ interface LinkData {
 
 interface UserData {
   userId: string; email: string; linkCount: number;
-  totalClicks: number; isOnline: boolean; lastSeen: string | null;
+  totalClicks: number; isOnline: boolean; lastSeen: string | null; isBanned: boolean;
 }
 
 interface DashboardData {
@@ -366,19 +366,20 @@ export default function AdminDashboardPage() {
                   <tbody>
                     {users.map(u => (
                       <tr key={u.userId} className="border-t border-[var(--shadow-dark)]/30">
-                        <td className="py-3 px-3">
-                          <div className="flex items-center gap-2">
-                            <Avatar email={u.email} size={28} tooltip />
-                            <p className="font-semibold text-[var(--text)] text-sm break-all min-w-0">{u.email}</p>
-                          </div>
-                        </td>
-                        <td className="py-3 px-3 text-center"><span className="neu-badge">{u.linkCount}</span></td>
-                        <td className="py-3 px-3 text-center"><span className="neu-badge text-[var(--primary)]">{u.totalClicks}</span></td>
-                        <td className="py-3 px-3 text-center hidden sm:table-cell">
-                          <span className={u.isOnline ? "neu-badge text-[var(--success)]" : "neu-badge text-[var(--text-secondary)]"}>
-                            {u.isOnline ? "Online" : "Offline"}
-                          </span>
-                        </td>
+<td className="py-3 px-3">
+                            <div className="flex items-center gap-2">
+                              <Avatar email={u.email} size={28} tooltip />
+                              <p className="font-semibold text-[var(--text)] text-sm break-all min-w-0">{u.email}</p>
+                              {u.isBanned && <span className="neu-badge text-[var(--danger)]">Banned</span>}
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 text-center"><span className="neu-badge">{u.linkCount}</span></td>
+                          <td className="py-3 px-3 text-center"><span className="neu-badge text-[var(--primary)]">{u.totalClicks}</span></td>
+                          <td className="py-3 px-3 text-center hidden sm:table-cell">
+                            <span className={u.isOnline ? "neu-badge text-[var(--success)]" : "neu-badge text-[var(--text-secondary)]"}>
+                              {u.isOnline ? "Online" : "Offline"}
+                            </span>
+                          </td>
                         <td className="py-3 px-3 hidden md:table-cell text-[var(--text-secondary)] text-xs">{u.lastSeen ? new Date(u.lastSeen).toLocaleString() : "Never"}</td>
                         <td className="py-3 px-3 text-center">
                           <div className="flex items-center justify-center gap-2">

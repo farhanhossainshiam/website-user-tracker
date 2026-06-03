@@ -9,25 +9,26 @@ export async function GET() {
     const { data: profile } = await supabase.from("Profile").select("role").eq("userId", user.id).single();
     if (!profile || profile.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    const { count: totalUsers } = await supabase.from("Profile").select("*", { count: "exact", head: true });
-
+    const { data: profiles } = await supabase.from("Profile").select("userId");
     const { data: presence } = await supabase.from("UserPresence").select("userId, lastSeenAt");
+
+    const profileIds = new Set((profiles || []).map(p => p.userId));
+    const presenceUserIds = new Set((presence || []).map(p => p.userId));
+    const allUserIds = new Set([...profileIds, ...presenceUserIds]);
+
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     let onlineCount = 0;
-    let offlineCount = 0;
     for (const p of presence || []) {
       if (p.lastSeenAt && new Date(p.lastSeenAt) > fiveMinutesAgo) {
         onlineCount++;
-      } else {
-        offlineCount++;
       }
     }
-    const presenceUserIds = new Set((presence || []).map(p => p.userId));
-    const usersNeverSeen = (totalUsers || 0) - presenceUserIds.size;
-    offlineCount += Math.max(0, usersNeverSeen);
+
+    const totalUsers = allUserIds.size;
+    const offlineCount = totalUsers - onlineCount;
 
     return NextResponse.json({
-      totalUsers: totalUsers || 0,
+      totalUsers,
       onlineUsers: onlineCount,
       offlineUsers: offlineCount,
     });

@@ -3,6 +3,7 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 export const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+export const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 let browserClient: ReturnType<typeof createSSRBrowserClient> | null = null;
 
@@ -35,4 +36,14 @@ export function createAnonClient() {
     auth: { persistSession: false },
   });
   return anonClient;
+}
+
+let adminClient: SupabaseClient | null = null;
+
+export function createAdminClient() {
+  if (adminClient) return adminClient;
+  adminClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: { persistSession: false },
+  });
+  return adminClient;
 }

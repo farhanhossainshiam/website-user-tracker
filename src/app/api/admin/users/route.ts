@@ -11,7 +11,8 @@ export async function GET() {
 
     const { data: profiles } = await supabase.from("Profile").select("userId, email, role");
     const { data: links } = await supabase.from("Link").select("userId, clickCount");
-    const { data: presence } = await supabase.from("UserPresence").select("*");
+    const { data: presence } = await supabase.from("UserPresence").select("userId, lastSeenAt, userEmail");
+    const { data: bans } = await supabase.from("BannedUsers").select("userId, bannedAt");
 
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
@@ -36,6 +37,11 @@ export async function GET() {
       }
     }
 
+    const bannedSet = new Set<string>();
+    for (const b of bans || []) {
+      bannedSet.add(b.userId);
+    }
+
     const allUserIds = new Set([...profileMap.keys(), ...presenceByUser.keys()]);
 
     const users = Array.from(allUserIds).map((userId) => {
@@ -52,6 +58,7 @@ export async function GET() {
         totalClicks: lc.totalClicks,
         isOnline,
         lastSeen,
+        isBanned: bannedSet.has(userId),
       };
     });
 

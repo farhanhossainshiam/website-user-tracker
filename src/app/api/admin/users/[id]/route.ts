@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/client";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -40,6 +41,10 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     const { id } = await params;
 
+    if (id === user.id) {
+      return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 });
+    }
+
     const { data: links } = await supabase.from("Link").select("id").eq("userId", id);
     for (const link of links || []) {
       await supabase.from("Click").delete().eq("linkId", link.id);
@@ -47,6 +52,14 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     await supabase.from("Link").delete().eq("userId", id);
     await supabase.from("UserPresence").delete().eq("userId", id);
     await supabase.from("BannedUsers").delete().eq("userId", id);
+    await supabase.from("Profile").delete().eq("userId", id);
+
+    const adminClient = createAdminClient();
+    const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(id);
+    if (authDeleteError) {
+      console.error("Auth delete error:", authDeleteError);
+      return NextResponse.json({ error: "Failed to delete auth user: " + authDeleteError.message }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (e) {
