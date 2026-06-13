@@ -34,7 +34,7 @@ export default function AdminDashboardPage() {
   const supabase = createBrowserClient();
   const { addToast } = useToast();
   const [user, setUser] = useState<any>(null);
-  const [tab, setTab] = useState<"links" | "users" | "stats">("stats");
+  const [tab, setTab] = useState<"links" | "users" | "stats" | "visitors">("stats");
   const [data, setData] = useState<DashboardData | null>(null);
   const [users, setUsers] = useState<UserData[]>([]);
   const [stats, setStats] = useState<UserStats>({ totalUsers: 0, onlineUsers: 0, offlineUsers: 0 });
@@ -175,6 +175,7 @@ export default function AdminDashboardPage() {
           <button onClick={() => setTab("stats")} className={tab === "stats" ? "neu-primary-btn !py-2.5 !px-5 text-sm" : "neu-btn px-5 py-2.5 text-sm font-semibold text-[var(--text-secondary)]"}>Statistics</button>
           <button onClick={() => setTab("links")} className={tab === "links" ? "neu-primary-btn !py-2.5 !px-5 text-sm" : "neu-btn px-5 py-2.5 text-sm font-semibold text-[var(--text-secondary)]"}>Links</button>
           <button onClick={() => { setTab("users"); fetchUsers(); }} className={tab === "users" ? "neu-primary-btn !py-2.5 !px-5 text-sm" : "neu-btn px-5 py-2.5 text-sm font-semibold text-[var(--text-secondary)]"}>Users</button>
+          <Link href="/admin/dashboard/visitors" className="neu-btn px-5 py-2.5 text-sm font-semibold text-[var(--text-secondary)]">Visitors</Link>
         </div>
 
         {tab === "stats" && (
