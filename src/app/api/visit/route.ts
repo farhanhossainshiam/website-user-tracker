@@ -5,7 +5,7 @@ import { getGeoData } from "@/lib/geo";
 
 export async function POST(request: NextRequest) {
   try {
-    const { page, screenResolution, language, referrer } = await request.json();
+    const { page, url, domain, screenResolution, language, referrer } = await request.json();
 
     if (!page) {
       return NextResponse.json({ error: "page required" }, { status: 400 });
@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
 
     const payload: Record<string, unknown> = {
       page,
+      domain: domain || "",
       ipAddress: ip,
       userAgent,
       browser: ua.browser,

@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     const { data: pageVisits, error: visitError } = await supabase
       .from("PageVisit")
-      .select("id, page, ipAddress, userAgent, browser, browserVersion, os, osVersion, deviceType, deviceVendor, deviceModel, screenResolution, language, referrer, country, city, isp, visitedAt")
+      .select("id, page, domain, ipAddress, userAgent, browser, browserVersion, os, osVersion, deviceType, deviceVendor, deviceModel, screenResolution, language, referrer, country, city, isp, visitedAt")
       .order("visitedAt", { ascending: false })
       .range(from, to);
 
@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
         originalUrl: link?.originalUrl || null,
         linkOwner: link?.userEmail || null,
         page: null,
+        domain: link?.domain || "",
         ipAddress: c.ipAddress,
         userAgent: c.userAgent,
         browser: c.browser,
@@ -79,10 +80,11 @@ export async function GET(request: NextRequest) {
     const pageVisitors = (pageVisits || []).map(v => ({
       type: "visit" as const,
       id: v.id,
-      source: v.page,
+      source: v.domain ? `${v.domain}${v.page}` : v.page,
       originalUrl: null,
       linkOwner: null,
       page: v.page,
+      domain: v.domain || "",
       ipAddress: v.ipAddress,
       userAgent: v.userAgent,
       browser: v.browser,
@@ -118,6 +120,7 @@ export async function GET(request: NextRequest) {
     const cities: Record<string, number> = {};
     const pages: Record<string, number> = {};
 
+    const domains: Record<string, number> = {};
     for (const v of allVisitors) {
       const b = v.browser || "Unknown";
       browsers[b] = (browsers[b] || 0) + 1;
@@ -131,6 +134,8 @@ export async function GET(request: NextRequest) {
       osStats[o] = (osStats[o] || 0) + 1;
       const ci = v.city || "Unknown";
       cities[ci] = (cities[ci] || 0) + 1;
+      const dm = v.domain || (v.type === "click" ? v.linkDomain || "dinka.shop" : "unknown");
+      domains[dm] = (domains[dm] || 0) + 1;
       if (v.page) pages[v.page] = (pages[v.page] || 0) + 1;
       if (v.type === "click" && v.shortCode) pages[`/s/${v.shortCode}`] = (pages[`/s/${v.shortCode}`] || 0) + 1;
     }
@@ -148,6 +153,7 @@ export async function GET(request: NextRequest) {
         os: Object.entries(osStats).sort(([,a],[,b]) => b-a).map(([name, count]) => ({ name, count })),
         cities: Object.entries(cities).sort(([,a],[,b]) => b-a).map(([name, count]) => ({ name, count })),
         pages: Object.entries(pages).sort(([,a],[,b]) => b-a).slice(0, 10).map(([name, count]) => ({ name, count })),
+        domains: Object.entries(domains).sort(([,a],[,b]) => b-a).map(([name, count]) => ({ name, count })),
       },
       page,
       limit,

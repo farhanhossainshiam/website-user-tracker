@@ -13,6 +13,7 @@ interface VisitorData {
   id: string;
   source: string;
   page: string | null;
+  domain: string;
   ipAddress: string;
   userAgent: string;
   browser: string;
@@ -49,10 +50,12 @@ interface AnalyticsData {
   os: AnalyticsItem[];
   cities: AnalyticsItem[];
   pages: AnalyticsItem[];
+  domains: AnalyticsItem[];
 }
 
 const EXPORT_FIELDS = [
   { key: "type", label: "Type" },
+  { key: "domain", label: "Domain" },
   { key: "source", label: "Source" },
   { key: "ipAddress", label: "IP Address" },
   { key: "userAgent", label: "User Agent" },
@@ -70,11 +73,12 @@ const EXPORT_FIELDS = [
 
 type ExportFieldKey = (typeof EXPORT_FIELDS)[number]["key"];
 
-const DEFAULT_FIELDS: ExportFieldKey[] = ["type", "source", "ipAddress", "country", "browser", "deviceType", "clickedAt"];
+const DEFAULT_FIELDS: ExportFieldKey[] = ["type", "domain", "source", "ipAddress", "country", "deviceType", "clickedAt"];
 
 function getFieldValue(v: VisitorData, key: ExportFieldKey): string {
   switch (key) {
     case "type": return v.type === "click" ? "Link Click" : "Page Visit";
+    case "domain": return v.domain || "-";
     case "source": return v.source || "-";
     case "ipAddress": return v.ipAddress;
     case "userAgent": return v.userAgent || "-";
@@ -305,6 +309,7 @@ export default function AdminVisitorsPage() {
                     <tr className="text-left text-[var(--text-secondary)]">
                       <th className="pb-3 font-semibold px-2">Type</th>
                       <th className="pb-3 font-semibold px-2">Time</th>
+                      <th className="pb-3 font-semibold px-2">Domain</th>
                       <th className="pb-3 font-semibold px-2">Source / Page</th>
                       <th className="pb-3 font-semibold px-2">IP</th>
                       <th className="pb-3 font-semibold px-2">User Agent</th>
@@ -332,6 +337,9 @@ export default function AdminVisitorsPage() {
                             </span>
                           </td>
                           <td className="py-2.5 px-2 text-[var(--text-secondary)] whitespace-nowrap text-xs">{new Date(v.timestamp).toLocaleString()}</td>
+                          <td className="py-2.5 px-2">
+                            <span className="neu-badge text-xs text-[var(--primary)]">{v.domain || (v.type === "click" ? v.linkDomain || "dinka.shop" : "unknown")}</span>
+                          </td>
                           <td className="py-2.5 px-2">
                             {v.type === "click" && v.shortCode ? (
                               <Link href={`/admin/dashboard/links/${v.linkId}`} className="text-[var(--primary)] font-semibold hover:underline text-xs">
@@ -373,6 +381,15 @@ export default function AdminVisitorsPage() {
 
         {tab === "analytics" && analytics && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+            <div className="neu-card !p-6">
+              <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4">Domains</h3>
+              {analytics.domains.map(d => (
+                <div key={d.name} className="flex justify-between py-2 border-t border-[var(--shadow-dark)]/20 first:border-0">
+                  <span className="text-sm text-[var(--text)]">{d.name}</span>
+                  <span className="neu-badge text-xs">{d.count}</span>
+                </div>
+              ))}
+            </div>
             <div className="neu-card !p-6">
               <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4">Browsers</h3>
               {analytics.browsers.slice(0, 10).map(b => (

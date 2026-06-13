@@ -16,6 +16,8 @@ export function VisitTracker() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             page: pathname || "/",
+            url: typeof window !== "undefined" ? window.location.href : "",
+            domain: typeof window !== "undefined" ? window.location.hostname : "",
             screenResolution: `${window.screen.width}x${window.screen.height}`,
             language: navigator.language || "",
             referrer: document.referrer || "",
