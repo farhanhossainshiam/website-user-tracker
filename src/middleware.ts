@@ -2,7 +2,31 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-export async function proxy(request: NextRequest) {
+const MAIN_DOMAIN = "womist.pro";
+
+export async function middleware(request: NextRequest) {
+  const host = request.headers.get("host") || "";
+  const hostname = host.split(":")[0];
+  const { pathname } = request.nextUrl;
+
+  // Short links and API routes work on ALL domains — no redirect
+  if (pathname.startsWith("/s/") || pathname.startsWith("/api/")) {
+    return handleAuth(request);
+  }
+
+  // Non-main domains: redirect all other pages to womist.pro
+  if (hostname !== MAIN_DOMAIN && hostname !== "localhost" && !hostname.startsWith("127.0.0.1")) {
+    const url = request.nextUrl.clone();
+    url.hostname = MAIN_DOMAIN;
+    url.protocol = "https:";
+    url.port = "";
+    return NextResponse.redirect(url, 308);
+  }
+
+  return handleAuth(request);
+}
+
+async function handleAuth(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -10,7 +34,9 @@ export async function proxy(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() { return request.cookies.getAll(); },
+        getAll() {
+          return request.cookies.getAll();
+        },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             supabaseResponse.cookies.set(name, value, options);
@@ -94,5 +120,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/login", "/register", "/dashboard/:path*", "/admin/:path*"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
