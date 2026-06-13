@@ -9,8 +9,10 @@ import { ThemeToggle } from "@/components/ThemeProvider";
 import { UserMenu } from "@/components/UserMenu";
 
 interface VisitorData {
+  type: "click" | "visit";
   id: string;
-  linkId: string;
+  source: string;
+  page: string | null;
   ipAddress: string;
   userAgent: string;
   browser: string;
@@ -26,11 +28,12 @@ interface VisitorData {
   country: string;
   city: string;
   isp: string;
-  clickedAt: string;
+  timestamp: string;
+  linkId: string | null;
   shortCode: string | null;
+  linkDomain: string | null;
   originalUrl: string | null;
   linkOwner: string | null;
-  linkDomain: string | null;
 }
 
 interface AnalyticsItem {
@@ -45,49 +48,46 @@ interface AnalyticsData {
   referrers: AnalyticsItem[];
   os: AnalyticsItem[];
   cities: AnalyticsItem[];
+  pages: AnalyticsItem[];
 }
 
 const EXPORT_FIELDS = [
+  { key: "type", label: "Type" },
+  { key: "source", label: "Source" },
   { key: "ipAddress", label: "IP Address" },
   { key: "userAgent", label: "User Agent" },
-  { key: "shortCode", label: "Link" },
-  { key: "originalUrl", label: "Destination" },
-  { key: "linkOwner", label: "Link Owner" },
   { key: "browser", label: "Browser" },
   { key: "os", label: "OS" },
   { key: "deviceType", label: "Device" },
-  { key: "deviceModel", label: "Model" },
   { key: "country", label: "Country" },
   { key: "city", label: "City" },
   { key: "isp", label: "ISP" },
+  { key: "referrer", label: "Referrer" },
   { key: "language", label: "Language" },
   { key: "screenResolution", label: "Screen" },
-  { key: "referrer", label: "Referrer" },
   { key: "clickedAt", label: "Time" },
 ] as const;
 
 type ExportFieldKey = (typeof EXPORT_FIELDS)[number]["key"];
 
-const DEFAULT_FIELDS: ExportFieldKey[] = ["ipAddress", "shortCode", "country", "browser", "deviceType", "clickedAt"];
+const DEFAULT_FIELDS: ExportFieldKey[] = ["type", "source", "ipAddress", "country", "browser", "deviceType", "clickedAt"];
 
 function getFieldValue(v: VisitorData, key: ExportFieldKey): string {
   switch (key) {
+    case "type": return v.type === "click" ? "Link Click" : "Page Visit";
+    case "source": return v.source || "-";
     case "ipAddress": return v.ipAddress;
     case "userAgent": return v.userAgent || "-";
-    case "shortCode": return v.shortCode ? `${v.linkDomain || "dinka.shop"}/s/${v.shortCode}` : "-";
-    case "originalUrl": return v.originalUrl || "-";
-    case "linkOwner": return v.linkOwner || "Guest";
     case "browser": return `${v.browser} ${v.browserVersion}`;
     case "os": return v.os ? `${v.os} ${v.osVersion || ""}`.trim() : "-";
     case "deviceType": return v.deviceType || "desktop";
-    case "deviceModel": return v.deviceModel || "-";
     case "country": return v.country || "-";
     case "city": return v.city || "-";
     case "isp": return v.isp || "-";
+    case "referrer": return v.referrer || "Direct";
     case "language": return v.language || "-";
     case "screenResolution": return v.screenResolution || "-";
-    case "referrer": return v.referrer || "Direct";
-    case "clickedAt": return new Date(v.clickedAt).toLocaleString();
+    case "clickedAt": return new Date(v.timestamp).toLocaleString();
   }
 }
 
@@ -124,9 +124,11 @@ export default function AdminVisitorsPage() {
   const [visitors, setVisitors] = useState<VisitorData[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [totalClicks, setTotalClicks] = useState(0);
+  const [totalPageVisits, setTotalPageVisits] = useState(0);
   const [uniqueVisitors, setUniqueVisitors] = useState(0);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"visitors" | "analytics">("visitors");
+  const [typeFilter, setTypeFilter] = useState<"all" | "click" | "visit">("all");
   const [expandedUA, setExpandedUA] = useState<Set<string>>(new Set());
   const [showExport, setShowExport] = useState(false);
   const [selectedFields, setSelectedFields] = useState<Set<ExportFieldKey>>(new Set(DEFAULT_FIELDS));
@@ -140,6 +142,7 @@ export default function AdminVisitorsPage() {
       setVisitors(d.visitors || []);
       setAnalytics(d.analytics || null);
       setTotalClicks(d.totalClicks || 0);
+      setTotalPageVisits(d.totalPageVisits || 0);
       setUniqueVisitors(d.uniqueVisitors || 0);
     }
     setLoading(false);
@@ -161,6 +164,8 @@ export default function AdminVisitorsPage() {
   };
 
   const filtered = visitors.filter(v => {
+    if (typeFilter !== "all" && v.type !== typeFilter) return false;
+    if (deviceFilter !== "all" && (v.deviceType || "desktop").toLowerCase() !== deviceFilter) return false;
     const s = search.toLowerCase();
     if (!s) return true;
     return (
@@ -169,14 +174,12 @@ export default function AdminVisitorsPage() {
       v.os?.toLowerCase().includes(s) ||
       v.country?.toLowerCase().includes(s) ||
       v.city?.toLowerCase().includes(s) ||
-      v.shortCode?.toLowerCase().includes(s) ||
+      v.source?.toLowerCase().includes(s) ||
       v.userAgent?.toLowerCase().includes(s) ||
       v.isp?.toLowerCase().includes(s) ||
-      v.linkOwner?.toLowerCase().includes(s)
+      v.linkOwner?.toLowerCase().includes(s) ||
+      v.page?.toLowerCase().includes(s)
     );
-  }).filter(v => {
-    if (deviceFilter === "all") return true;
-    return (v.deviceType || "desktop").toLowerCase() === deviceFilter;
   });
 
   if (loading) {
@@ -190,13 +193,6 @@ export default function AdminVisitorsPage() {
       </div>
     );
   }
-
-  const onlineIps = new Set<string>();
-  visitors.forEach(v => {
-    if (v.clickedAt && new Date(v.clickedAt) > new Date(Date.now() - 5 * 60 * 1000)) {
-      onlineIps.add(v.ipAddress);
-    }
-  });
 
   return (
     <div className="min-h-screen neu-bg">
@@ -218,20 +214,20 @@ export default function AdminVisitorsPage() {
       <main className="px-6 pb-10 w-full">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 animate-fade-in">
           <div className="neu-card !p-4 text-center">
-            <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase">Total Clicks</p>
+            <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase">Link Clicks</p>
             <p className="text-2xl font-bold text-[var(--primary)] mt-1">{totalClicks}</p>
           </div>
           <div className="neu-card !p-4 text-center">
-            <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase">Shown</p>
-            <p className="text-2xl font-bold text-[var(--text)] mt-1">{visitors.length}</p>
+            <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase">Page Visits</p>
+            <p className="text-2xl font-bold text-[var(--success)] mt-1">{totalPageVisits}</p>
           </div>
           <div className="neu-card !p-4 text-center">
             <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase">Unique IPs</p>
-            <p className="text-2xl font-bold text-[var(--success)] mt-1">{uniqueVisitors}</p>
+            <p className="text-2xl font-bold text-[var(--text)] mt-1">{uniqueVisitors}</p>
           </div>
           <div className="neu-card !p-4 text-center">
-            <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase">Online Now</p>
-            <p className="text-2xl font-bold text-[var(--success)] mt-1">{onlineIps.size}</p>
+            <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase">Shown</p>
+            <p className="text-2xl font-bold text-[var(--text-secondary)] mt-1">{visitors.length}</p>
           </div>
         </div>
 
@@ -247,11 +243,20 @@ export default function AdminVisitorsPage() {
               <div className="flex flex-col sm:flex-row gap-3 mb-4">
                 <input
                   type="text"
-                  placeholder="Search by IP, browser, country, ISP, link..."
+                  placeholder="Search by IP, browser, country, ISP, page..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   className="neu-pressed !p-3 !rounded-xl flex-1 text-sm text-[var(--text)] bg-transparent outline-none placeholder:text-[var(--text-secondary)]"
                 />
+                <select
+                  value={typeFilter}
+                  onChange={e => setTypeFilter(e.target.value as "all" | "click" | "visit")}
+                  className="neu-pressed !p-3 !rounded-xl text-sm text-[var(--text)] bg-transparent outline-none"
+                >
+                  <option value="all">All Types</option>
+                  <option value="click">Link Clicks</option>
+                  <option value="visit">Page Visits</option>
+                </select>
                 <select
                   value={deviceFilter}
                   onChange={e => setDeviceFilter(e.target.value)}
@@ -295,46 +300,52 @@ export default function AdminVisitorsPage() {
               {filtered.length === 0 ? (
                 <p className="text-center py-8 text-[var(--text-secondary)]">No visitors found.</p>
               ) : (
-                <table className="w-full text-sm min-w-[1100px]">
+                <table className="w-full text-sm min-w-[1200px]">
                   <thead>
                     <tr className="text-left text-[var(--text-secondary)]">
+                      <th className="pb-3 font-semibold px-2">Type</th>
                       <th className="pb-3 font-semibold px-2">Time</th>
-                      <th className="pb-3 font-semibold px-2">Link</th>
+                      <th className="pb-3 font-semibold px-2">Source / Page</th>
                       <th className="pb-3 font-semibold px-2">IP</th>
                       <th className="pb-3 font-semibold px-2">User Agent</th>
                       <th className="pb-3 font-semibold px-2">Browser</th>
                       <th className="pb-3 font-semibold px-2">OS</th>
                       <th className="pb-3 font-semibold px-2">Device</th>
-                      <th className="pb-3 font-semibold px-2">Model</th>
                       <th className="pb-3 font-semibold px-2">Country</th>
                       <th className="pb-3 font-semibold px-2">City</th>
                       <th className="pb-3 font-semibold px-2">ISP</th>
                       <th className="pb-3 font-semibold px-2">Referrer</th>
-                      <th className="pb-3 font-semibold px-2">Language</th>
+                      <th className="pb-3 font-semibold px-2">Lang</th>
                       <th className="pb-3 font-semibold px-2">Screen</th>
-                      <th className="pb-3 font-semibold px-2">Owner</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filtered.map(v => {
                       const isExpanded = expandedUA.has(v.id);
                       const uaFull = v.userAgent || "-";
-                      const uaShort = uaFull.length > 40 ? uaFull.slice(0, 40) + "..." : uaFull;
+                      const uaShort = uaFull.length > 35 ? uaFull.slice(0, 35) + "..." : uaFull;
                       return (
                         <tr key={v.id} className="border-t border-[var(--shadow-dark)]/30 hover:bg-[var(--shadow-dark)]/5">
-                          <td className="py-2.5 px-2 text-[var(--text-secondary)] whitespace-nowrap text-xs">{new Date(v.clickedAt).toLocaleString()}</td>
                           <td className="py-2.5 px-2">
-                            {v.shortCode ? (
+                            <span className={v.type === "click" ? "neu-badge text-xs text-[var(--primary)]" : "neu-badge text-xs text-[var(--success)]"}>
+                              {v.type === "click" ? "Click" : "Visit"}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-2 text-[var(--text-secondary)] whitespace-nowrap text-xs">{new Date(v.timestamp).toLocaleString()}</td>
+                          <td className="py-2.5 px-2">
+                            {v.type === "click" && v.shortCode ? (
                               <Link href={`/admin/dashboard/links/${v.linkId}`} className="text-[var(--primary)] font-semibold hover:underline text-xs">
                                 {(v.linkDomain || "dinka.shop")}/s/{v.shortCode}
                               </Link>
-                            ) : <span className="text-[var(--text-secondary)] text-xs">-</span>}
+                            ) : (
+                              <span className="text-xs text-[var(--text-secondary)]">{v.page || v.source}</span>
+                            )}
                           </td>
                           <td className="py-2.5 px-2 font-mono text-xs text-[var(--text-secondary)]">{v.ipAddress}</td>
-                          <td className="py-2.5 px-2 max-w-[180px]" title={uaFull}>
+                          <td className="py-2.5 px-2 max-w-[160px]" title={uaFull}>
                             <span className="text-xs text-[var(--text-secondary)] cursor-pointer" onClick={() => { const s = new Set(expandedUA); isExpanded ? s.delete(v.id) : s.add(v.id); setExpandedUA(s); }}>
                               {isExpanded ? uaFull : uaShort}
-                              {uaFull.length > 40 && <span className="text-[var(--primary)] ml-1">{isExpanded ? "less" : "more"}</span>}
+                              {uaFull.length > 35 && <span className="text-[var(--primary)] ml-1">{isExpanded ? "less" : "more"}</span>}
                             </span>
                           </td>
                           <td className="py-2.5 px-2"><span className="neu-badge text-xs">{v.browser} {v.browserVersion}</span></td>
@@ -344,14 +355,12 @@ export default function AdminVisitorsPage() {
                               {v.deviceType || "desktop"}
                             </span>
                           </td>
-                          <td className="py-2.5 px-2 text-xs text-[var(--text-secondary)]">{v.deviceModel || "-"}</td>
                           <td className="py-2.5 px-2 text-xs text-[var(--text-secondary)]">{v.country}</td>
                           <td className="py-2.5 px-2 text-xs text-[var(--text-secondary)]">{v.city}</td>
                           <td className="py-2.5 px-2 text-xs text-[var(--text-secondary)]">{v.isp}</td>
-                          <td className="py-2.5 px-2 text-xs text-[var(--text-secondary)] max-w-[100px] truncate">{v.referrer || "Direct"}</td>
+                          <td className="py-2.5 px-2 text-xs text-[var(--text-secondary)] max-w-[80px] truncate" title={v.referrer || "Direct"}>{v.referrer || "Direct"}</td>
                           <td className="py-2.5 px-2 text-xs text-[var(--text-secondary)]">{v.language}</td>
                           <td className="py-2.5 px-2 text-xs text-[var(--text-secondary)]">{v.screenResolution}</td>
-                          <td className="py-2.5 px-2 text-xs text-[var(--text-secondary)]">{v.linkOwner || "Guest"}</td>
                         </tr>
                       );
                     })}
@@ -410,11 +419,11 @@ export default function AdminVisitorsPage() {
               ))}
             </div>
             <div className="neu-card !p-6">
-              <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4">Cities</h3>
-              {analytics.cities.slice(0, 10).map(c => (
-                <div key={c.name} className="flex justify-between py-2 border-t border-[var(--shadow-dark)]/20 first:border-0">
-                  <span className="text-sm text-[var(--text)]">{c.name}</span>
-                  <span className="neu-badge text-xs">{c.count}</span>
+              <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4">Top Pages</h3>
+              {analytics.pages.slice(0, 10).map(p => (
+                <div key={p.name} className="flex justify-between py-2 border-t border-[var(--shadow-dark)]/20 first:border-0">
+                  <span className="text-sm text-[var(--text)] truncate max-w-[80%]">{p.name}</span>
+                  <span className="neu-badge text-xs">{p.count}</span>
                 </div>
               ))}
             </div>

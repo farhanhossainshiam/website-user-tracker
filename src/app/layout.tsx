@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ToastProvider } from "@/components/ToastProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { VisitTracker } from "@/components/VisitTracker";
 
 export const metadata: Metadata = {
   title: "Womist Short - Smart Link Shortener",
@@ -17,7 +18,10 @@ export default function RootLayout({
     <html lang="en" className="h-full" suppressHydrationWarning>
       <body className="min-h-full neu-bg" suppressHydrationWarning>
         <ThemeProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider>
+            <VisitTracker />
+            {children}
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>
